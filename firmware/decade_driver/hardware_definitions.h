@@ -83,3 +83,17 @@ bool wideShiftOut(const unsigned long resVal){
 	 digitalWrite(latchPin, HIGH);
 
 }
+
+bool simpleShiftOut(const char resVal){
+	 
+	digitalWrite(latchPin, LOW);
+	shiftOut(dataPin, clockPin, MSBFIRST, resVal);
+	digitalWrite(latchPin, HIGH);
+
+}
+
+bool sound_feedback_itsalive(void){
+	simpleShiftOut(255);
+	delay(3000);
+	simpleShiftOut(0);
+}
