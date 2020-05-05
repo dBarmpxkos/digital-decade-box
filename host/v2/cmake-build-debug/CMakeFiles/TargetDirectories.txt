@@ -1,0 +1,3 @@
+D:/DBx/microSENSES/projects/decade_box/digital-decade-box/host/v2/cmake-build-debug/CMakeFiles/v2.dir
+D:/DBx/microSENSES/projects/decade_box/digital-decade-box/host/v2/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/DBx/microSENSES/projects/decade_box/digital-decade-box/host/v2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

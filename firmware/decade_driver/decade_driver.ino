@@ -1,19 +1,18 @@
 #include "hardware_definitions.h" 
-unsigned long resVal = 1, resHigh = 128;
 
-void setup() {
+void setup() {	
 
-  init_pins();
-  sound_feedback_itsalive();
-
+	init_pins();
+	Serial.println(">");
 }
+
 
 void loop() {
-	// char inputBuffer[100] = {'\0'};
-	// unsigned long resVal;
-	// monitor_serial(inputBuffer);
-	// resVal = strtoul(inputBuffer, NULL, 0);
-	// if (resVal) // wideShiftOut(resVal);
-	// simpleShiftOut(resVal);
-}
 
+	monitor_serial();
+	
+	// for (int i=0; i<65535; i++){
+	// 	wideShiftOut(65535 - i);
+	// 	delay(300);
+	// }
+}
