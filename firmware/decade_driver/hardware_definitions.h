@@ -1,27 +1,29 @@
-/* 74HC595 Pins:
- * latch: 4
- * data:  2
- * clock: 5
- * enable: 3
- */
-
 #include <ArduinoJson.h>
 
-#define ledPin 13
-#define latchPin   	4
-#define dataPin  	2
-#define clockPin  	5
-#define enablePin  	3
-
-
+#define ledPin      2
+#define latchPin   	18
+#define dataPin  	17
+#define clockPin  	19
+#define enablePin  	5
+#define resetPin    4
 
 typedef struct {
-
     char* uid;
     uint32_t resistorValue;
     uint16_t shiftRegisterValue;
-
 } resistorStructure;
+
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  ((byte) & 0x80 ? '1' : '0'), \
+  ((byte) & 0x40 ? '1' : '0'), \
+  ((byte) & 0x20 ? '1' : '0'), \
+  ((byte) & 0x10 ? '1' : '0'), \
+  ((byte) & 0x08 ? '1' : '0'), \
+  ((byte) & 0x04 ? '1' : '0'), \
+  ((byte) & 0x02 ? '1' : '0'), \
+  ((byte) & 0x01 ? '1' : '0') 
+
 
 /* --- base floor --- */
 resistorStructure RES1;
@@ -31,94 +33,69 @@ resistorStructure RES4;
 resistorStructure RES5;
 resistorStructure RES6;
 resistorStructure RES7;
-
-/* --- upper floor --- */
 resistorStructure RES8;
-resistorStructure RES9;
-resistorStructure RES10;
-resistorStructure RES11;
-resistorStructure RES12;
-resistorStructure RES13;
-resistorStructure RES14;
-/* --- upper floor --- */
 
 
-/* helper functions ------------------------------------------ */
-static void yield_on_char(void){
+static void
+yield_on_char(void) {
     if ( serialEventRun ) serialEventRun();
     if ( Serial.available() ) return;
 }
 
-static void flush_serial_input(void){
+static void 
+flush_serial_input(void){
     if ( serialEventRun ) serialEventRun();
     do { 
         Serial.read(); 
         delay(50); 
     } while ( Serial.available() > 0 );
 }
- 
-static void blink_LED(void){
-    digitalWrite(ledPin, !digitalRead(ledPin));
+
+static void 
+blink_LED(void){
+    digitalWrite(ledPin, HIGH);
+    delay(100);
+    digitalWrite(ledPin, LOW);
+
 }
 
-/* helper functions ------------------------------------------ */
-bool init_pins(){
-	pinMode(latchPin, OUTPUT);
-	pinMode(clockPin, OUTPUT);
-	pinMode(dataPin, OUTPUT);
-	pinMode(enablePin, OUTPUT);
-	digitalWrite(enablePin, LOW);
- 	Serial.begin(9600);
+void 
+init_pins(){
+    pinMode(latchPin, OUTPUT);
+    pinMode(clockPin, OUTPUT);
+    pinMode(dataPin, OUTPUT);
+    pinMode(enablePin, OUTPUT);
+    digitalWrite(enablePin, LOW);
+    pinMode(resetPin, OUTPUT);
+    digitalWrite(resetPin, HIGH);
 }
 
-void init_resistor(resistorStructure *resLoad, char* name, uint32_t value, uint16_t shiftValue){
-
+void 
+init_resistor(resistorStructure *resLoad, 
+              char* name, 
+              uint32_t value, 
+              uint16_t shiftValue) {
     resLoad->uid = name;
     resLoad->resistorValue = value;
     resLoad->shiftRegisterValue = shiftValue;
-
 }
 
 
-/* 
-## R1: 1.980k
-## R2: 3.81k
-## R3: 8.11k
-## R4: 8.06k
-## R5: 32.5k
-## R6: 148.8k
-## R7: 511k
-## 
-## Upper floor:
-## R8: 2.22m
-## R9: 3.85m
-## R10: 4.81m
-## R11: 9.79m
-## R12: 11.52m
-## R13: 10.63m
-## R14: 9.99m
-*/
-
-void init_all_resistors(){
-
-    init_resistor(&RES1, "R1", 1980, 2);
-    init_resistor(&RES2, "R2", 3810, 4);
-    init_resistor(&RES3, "R3", 8110, 8);
-    init_resistor(&RES4, "R4", 8060, 16);
-    init_resistor(&RES5, "R5", 32500, 32);
-    init_resistor(&RES6, "R6", 148800, 64);
-    init_resistor(&RES7, "R7", 511000, 128);
-    init_resistor(&RES8, "R8", 2220000, 512);
-    init_resistor(&RES9, "R9", 3850000, 1024);
-    init_resistor(&RES10, "R10", 4810000, 2048);
-    init_resistor(&RES11, "R11", 9790000, 4096);
-    init_resistor(&RES12, "R12", 11520000, 8192);
-    init_resistor(&RES13, "R13", 10630000, 16384);
-    init_resistor(&RES14, "R14", 9990000, 32768);
+void 
+init_all_resistors(){
+    init_resistor(&RES1, "R1", 330, pow(2,0));
+    init_resistor(&RES2, "R2", 330, pow(2,1));
+    init_resistor(&RES3, "R3", 330, pow(2,2));
+    init_resistor(&RES4, "R4", 330, pow(2,3));
+    init_resistor(&RES5, "R5", 330, pow(2,4));
+    init_resistor(&RES6, "R6", 330, pow(2,5));
+    init_resistor(&RES7, "R7", 330, pow(2,6));
+    init_resistor(&RES8, "R8", 330, pow(2,7));
 }
 
 
-bool wideShiftOut(const unsigned long resVal){
+bool 
+wideShiftOut(const unsigned long resVal){
 
     digitalWrite(latchPin, LOW);
     shiftOut(dataPin, clockPin, MSBFIRST, highByte(resVal));
@@ -128,8 +105,9 @@ bool wideShiftOut(const unsigned long resVal){
 
 }
 
-bool simpleShiftOut(const char resVal){
-     
+bool 
+simpleShiftOut(const int resVal){
+
     digitalWrite(latchPin, LOW);
     shiftOut(dataPin, clockPin, MSBFIRST, resVal);
     digitalWrite(latchPin, HIGH);
@@ -137,22 +115,28 @@ bool simpleShiftOut(const char resVal){
 
 }
 
-bool sound_feedback_itsalive(void){
-    wideShiftOut(1);
-    delay(500);
-    wideShiftOut(65534);
-    delay(500);
+void 
+sound_feedback(void){
+    for (int k=0;k<3;k++){
+        for (int i=0;i<8;i++){
+            simpleShiftOut(0xff-pow(2,i));
+            delay(30);     
+        }  
+        delay(100);     
+    }
+    simpleShiftOut(0);
 }
 
 /* json parser for settings */
-bool settings(void) {
+bool 
+settings(void) {
     StaticJsonDocument<200> JSONSettings;
 
     DeserializationError error = deserializeJson(JSONSettings, Serial);
     if (error) {
         Serial.print(F("[err]: deserializeJson() failed: "));
         Serial.println(error.c_str());
-        return;
+        return false;
     }
 
     bool enable = JSONSettings["en"];
@@ -162,17 +146,19 @@ bool settings(void) {
     
     else {
         uint32_t resVal = JSONSettings["resVal"];
- 		Serial.print(F("[JSONSettings][resVal]: ")); Serial.println(resVal);
+        Serial.print(F("[JSONSettings][resVal]: ")); Serial.println(resVal);
         uint16_t shiftRegisterIncoming = JSONSettings["shiftVal"];
         Serial.print(F("[JSONSettings][shiftVal]: ")); Serial.println(shiftRegisterIncoming);
-        wideShiftOut(shiftRegisterIncoming);
+        simpleShiftOut(shiftRegisterIncoming);
         blink_LED();
 
     }
+    return true;
 }
 
 
-bool monitor_serial(void) {
+bool
+ monitor_serial(void) {
     int8_t settingsType = -1;
 
     if (Serial.available() > 0) {
@@ -180,12 +166,11 @@ bool monitor_serial(void) {
         /* if first char is indicating that settings are coming */
         if (cmd == '>') {   
             Serial.println(F("[ser]: settings flag received"));
-            while (!Serial.available()){ /* wait for host payload */
+            while (!Serial.available()) { /* wait for host payload */
                 delay(20);
             }
- 			cmd = Serial.read();
-            /* read next char; R: resVal settings */
-            switch (cmd) {
+            cmd = Serial.read();    /* read next char; R: resVal settings */
+            switch (cmd) { 
                 case 'R':
                     settingsType = 0;
                     settings();
